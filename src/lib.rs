@@ -1,5 +1,11 @@
 /*! Just kvstore(temp) */
 
-pub use kvstore::KvStore;
+mod engines;
+mod error;
 
-mod kvstore;
+pub use engines::kvstore::*;
+pub use engines::KvsEngine;
+pub use error::Error;
+
+/// Alias for a Result with the error type kvs::Error
+pub type Result<T> = std::result::Result<T, crate::Error>;

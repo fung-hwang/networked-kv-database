@@ -1,7 +1,7 @@
-use core::panic;
-
+use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
-// use kvs::KvStore;
+use kvs::{KvStore, KvsEngine};
+use std::env::current_dir;
 
 #[derive(Parser, Debug)]
 #[command(name = "kvs", author, version, about, long_about = None)]
@@ -36,24 +36,34 @@ struct Remove {
     key: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let options = Options::parse();
     // println!("{:?}", options);
 
-    // let kvstore = KvStore::new();
+    let mut kvstore = KvStore::open(current_dir()?.join("kvstore.db"))?;
 
     match &options.command {
-        Commands::Set(_) => {
-            eprintln!("set unimplemented");
-            panic!()
+        Commands::Set(Set { key, value }) => {
+            kvstore.set(key.to_owned(), value.to_owned())?;
         }
-        Commands::Get(_) => {
-            eprintln!("get unimplemented");
-            panic!()
+        Commands::Get(Get { key }) => {
+            if let Some(value) = kvstore.get(key.to_owned())? {
+                println!("{}", value);
+            } else {
+                println!("Key not found");
+            }
         }
-        Commands::Rm(_) => {
-            eprintln!("remove unimplemented");
-            panic!()
+        Commands::Rm(Remove { key }) => {
+            let rst = kvstore.remove(key.to_owned());
+            if let Err(kvs::Error::KeyNotFound) = rst {
+                // `kvs rm <KEY>` should print "Key not found" for an empty database and exit with non-zero code.
+                println!("Key not found");
+                std::process::exit(-1);
+            } else {
+                rst?;
+            }
         }
     }
+
+    Ok(())
 }
