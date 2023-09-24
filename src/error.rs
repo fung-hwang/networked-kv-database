@@ -7,8 +7,12 @@ pub enum Error {
     KeyNotFound,
     #[error("Unexpected Command")]
     UnexpectedCommand,
+    #[error("{}",.0)]
+    ErrorMessage(String),
     #[error("IO Error: {}",.0)]
     IO(#[from] std::io::Error),
     #[error("Serde_json Error: {}", .0)]
     SerdeJson(#[from] serde_json::Error),
+    #[error("redb Error: {}", .0)]
+    Redb(#[from] redb::Error),
 }
