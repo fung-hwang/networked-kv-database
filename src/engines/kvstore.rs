@@ -207,7 +207,7 @@ impl KvsEngine for KvStore {
             size: _,
         }) = self.index.get(&key)
         {
-            let reader = self.readers.get_mut(&file_id).unwrap();
+            let reader = self.readers.get_mut(file_id).unwrap();
             reader.seek(SeekFrom::Start(*pos))?;
             let mut a = serde_json::Deserializer::from_reader(reader);
             let cmd = Command::deserialize(&mut a)?;
@@ -275,7 +275,8 @@ struct BufReaderWithPos<T: Seek + Read> {
 
 impl<T: Seek + Read> BufReaderWithPos<T> {
     fn new(mut inner: T) -> Self {
-        let pos = inner.seek(SeekFrom::Current(0)).unwrap();
+        // let pos = inner.seek(SeekFrom::Current(0)).unwrap();
+        let pos = inner.stream_position().unwrap();
         Self {
             buf_reader: BufReader::new(inner),
             pos,
@@ -305,7 +306,7 @@ struct BufWriterWithPos<T: Seek + Write> {
 
 impl<T: Seek + Write> BufWriterWithPos<T> {
     fn new(mut inner: T) -> Self {
-        let pos = inner.seek(SeekFrom::Current(0)).unwrap(); // Initial cursor
+        let pos = inner.stream_position().unwrap(); // Initial cursor
         Self {
             buf_writer: BufWriter::new(inner),
             pos,

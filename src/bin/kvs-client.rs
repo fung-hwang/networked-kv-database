@@ -1,9 +1,7 @@
-use anyhow;
 use chrono::Local;
 use clap::{Args, Parser, Subcommand};
 use env_logger::Env;
 use kvs::KvsClient;
-use log::{debug, info};
 use std::io::Write;
 
 #[derive(Parser, Debug)]
@@ -84,7 +82,7 @@ fn main() -> anyhow::Result<()> {
         Commands::Set(Set { key, value, addr }) => {
             // debug!("Set {} {}", key, value);
             let client = KvsClient::new(addr);
-            let rst = client.set(&key, &value)?;
+            client.set(&key, &value)?;
             // debug!("Result: {:?}", rst);
         }
         Commands::Get(Get { key, addr }) => {
@@ -99,7 +97,7 @@ fn main() -> anyhow::Result<()> {
         Commands::Rm(Remove { key, addr }) => {
             // debug!("Get {}", key);
             let client = KvsClient::new(addr);
-            let rst = client.remove(&key)?;
+            client.remove(&key)?;
             // debug!("Result: {:?}", rst);
         }
     }

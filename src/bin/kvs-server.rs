@@ -1,4 +1,3 @@
-use anyhow;
 use chrono::Local;
 use clap::{Parser, ValueEnum};
 use env_logger::Env;
@@ -13,7 +12,7 @@ use std::path::PathBuf;
 enum Engine {
     Kvs, // KvStore
     Redb,
-    Sled,
+    // Sled,
 }
 
 #[derive(Parser, Debug)]
@@ -62,17 +61,16 @@ impl Options {
                 Self::engine_file_path()?,
                 format!("{:?}", self.engine.as_ref().unwrap()),
             )?;
-        } else {
-            if self.engine.is_none() {
-                self.engine = cur_engine;
-            } else if cur_engine != self.engine {
-                error!(
-                    "cur_engine: {:?} != options.engine: {:?}",
-                    cur_engine, self.engine
-                );
-                std::process::exit(1);
-            }
+        } else if self.engine.is_none() {
+            self.engine = cur_engine;
+        } else if cur_engine != self.engine {
+            error!(
+                "cur_engine: {:?} != options.engine: {:?}",
+                cur_engine, self.engine
+            );
+            std::process::exit(1);
         }
+
         anyhow::Ok(())
     }
 
@@ -139,8 +137,10 @@ fn run(mut options: Options) -> anyhow::Result<()> {
     info!("Storage engine: {:?}", options.engine.as_ref().unwrap());
     info!("Listening on {}", options.addr);
 
-    let mut server = kvs::KvsServer::<KvStore>::new()?;
-    server.start(options.addr)?;
+    match options.engine.unwrap() {
+        Engine::Kvs => kvs::KvsServer::<KvStore>::new()?.start(options.addr)?,
+        Engine::Redb => kvs::KvsServer::<Redb>::new()?.start(options.addr)?,
+    }
 
     Ok(())
 }

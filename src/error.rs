@@ -13,6 +13,6 @@ pub enum Error {
     IO(#[from] std::io::Error),
     #[error("Serde_json Error: {}", .0)]
     SerdeJson(#[from] serde_json::Error),
-    #[error("redb Error: {}", .0)]
+    #[error("Redb Error: {}", .0)]
     Redb(#[from] redb::Error),
 }
