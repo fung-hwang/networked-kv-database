@@ -23,4 +23,9 @@ assert_cmd = "2.0"
 predicates = "3.0"
 tempfile = "3.8"
 walkdir = "2.4"
+criterion = "0.5"
+rand = { version = "0.8.5", features = [ "small_rng" ] }
 
+[[bench]]
+name = "bench_engines"
+harness = false
