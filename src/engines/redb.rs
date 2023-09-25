@@ -10,15 +10,10 @@ pub struct Redb {
 
 impl KvsEngine for Redb {
     /// New redb at the specified path
-    ///
-    /// The final component of path is redb data file
     fn open(path: impl AsRef<std::path::Path>) -> Result<Self> {
-        // The final component of path is redb data file(not dir), which is different from KvStore(KvStore is a dir)
-        if let Some(parent_of_path) = path.as_ref().parent() {
-            std::fs::create_dir_all(parent_of_path)?;
-        }
+        std::fs::create_dir_all(&path)?;
 
-        match Database::create(path) {
+        match Database::create(path.as_ref().join("redb_data")) {
             Ok(db) => Ok(Self { db }),
             Err(db_err) => Err(crate::Error::Redb(db_err.into())),
         }
@@ -66,13 +61,12 @@ impl KvsEngine for Redb {
 
 #[cfg(test)]
 mod tests {
-    // cargo test -- --test-threads=1
     use super::*;
-    use std::env::current_dir;
+    use tempfile::TempDir;
 
     #[test]
     fn get_value() {
-        let mut db = Redb::open(current_dir().unwrap().join("redb_data")).unwrap();
+        let mut db = Redb::open(TempDir::new().unwrap().path()).unwrap();
         db.set("key1".to_owned(), "value1".to_owned()).unwrap();
         assert_eq!(
             db.get("key1".to_owned()).unwrap(),
@@ -82,7 +76,7 @@ mod tests {
 
     #[test]
     fn get_non_existent_value() {
-        let mut db = Redb::open(current_dir().unwrap().join("redb_data")).unwrap();
+        let mut db = Redb::open(TempDir::new().unwrap().path()).unwrap();
         db.set("key1".to_owned(), "value1".to_owned()).unwrap();
         assert_eq!(
             db.get("key1".to_owned()).unwrap(),
@@ -94,14 +88,14 @@ mod tests {
 
     #[test]
     fn remove_value() {
-        let mut db = Redb::open(current_dir().unwrap().join("redb_data")).unwrap();
+        let mut db = Redb::open(TempDir::new().unwrap().path()).unwrap();
         db.set("key1".to_owned(), "value1".to_owned()).unwrap();
         assert!(db.remove("key1".to_owned()).is_ok());
     }
 
     #[test]
     fn remove_non_existent_value() {
-        let mut db = Redb::open(current_dir().unwrap().join("redb_data")).unwrap();
+        let mut db = Redb::open(TempDir::new().unwrap().path()).unwrap();
         db.set("key1".to_owned(), "value1".to_owned()).unwrap();
         assert_eq!(
             db.get("key1".to_owned()).unwrap(),
