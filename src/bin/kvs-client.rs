@@ -13,6 +13,7 @@ struct Options {
 }
 
 #[derive(Subcommand, Debug)]
+#[allow(rustdoc::invalid_html_tags)]
 enum Commands {
     /// set <KEY> <VALUE> [--addr IP-PORT] -> Set the value of a string key to a string
     Set(Set),

@@ -17,6 +17,9 @@ log = { version = "0.4", features = ["release_max_level_warn"] }
 env_logger = "0.10"
 chrono = "0.4"
 redb = "1.2"
+crossbeam-channel = "0.5"
+num_cpus = "1.0"
+rayon = "1.8"
 
 [dev-dependencies]
 assert_cmd = "2.0"
@@ -25,6 +28,9 @@ tempfile = "3.8"
 walkdir = "2.4"
 criterion = "0.5"
 rand = { version = "0.8.5", features = [ "small_rng" ] }
+crossbeam-utils = "0.8"
+panic-control = "0.1.4"
+
 
 [[bench]]
 name = "bench_engines"

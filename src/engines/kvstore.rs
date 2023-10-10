@@ -6,6 +6,7 @@ use std::fs::{self, create_dir_all, File};
 use std::io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::result;
+use std::sync::{Arc, Mutex};
 
 const COMPACT_THRESHOLD: u64 = 1_000_000; // Compact when reaching the threshold
 
@@ -28,6 +29,38 @@ const COMPACT_THRESHOLD: u64 = 1_000_000; // Compact when reaching the threshold
 /// store.remove("key".to_string()).unwrap();
 /// ```
 pub struct KvStore {
+    inner: Arc<Mutex<InnerStore>>, // FIXME: Ugly implementation
+}
+
+impl KvsEngine for KvStore {
+    fn open(path: impl AsRef<std::path::Path>) -> Result<Self> {
+        Ok(Self {
+            inner: Arc::new(Mutex::new(InnerStore::open(path)?)),
+        })
+    }
+
+    fn set(&self, key: String, value: String) -> Result<()> {
+        self.inner.lock().unwrap().set(key, value)
+    }
+
+    fn get(&self, key: String) -> Result<Option<String>> {
+        self.inner.lock().unwrap().get(key)
+    }
+
+    fn remove(&self, key: String) -> Result<()> {
+        self.inner.lock().unwrap().remove(key)
+    }
+}
+
+impl Clone for KvStore {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
+struct InnerStore {
     path: PathBuf,
     index: HashMap<String, CommandPos>, // A map of keys to log pointers
     readers: HashMap<u64, BufReaderWithPos<File>>, // A map of file_id to reader
@@ -36,7 +69,7 @@ pub struct KvStore {
     uncompacted_size: u64,
 }
 
-impl KvStore {
+impl InnerStore {
     fn compact(&mut self) -> Result<()> {
         // Collect set command in index into new data file
         let compaction_file_id = self.active_file_id + 1;
@@ -80,9 +113,7 @@ impl KvStore {
 
         Ok(())
     }
-}
 
-impl KvsEngine for KvStore {
     /// Open the KvStore at a given path.
     ///
     /// # Errors
@@ -121,7 +152,7 @@ impl KvsEngine for KvStore {
         let writer = new_data_file(&path, active_file_id, &mut readers)?;
 
         let path = path.as_ref().to_path_buf();
-        Ok(KvStore {
+        Ok(Self {
             path,
             index,
             readers,
@@ -211,8 +242,8 @@ impl KvsEngine for KvStore {
             reader.seek(SeekFrom::Start(*pos))?;
             let mut a = serde_json::Deserializer::from_reader(reader);
             let cmd = Command::deserialize(&mut a)?;
+            // let cmd = serde_json::from_reader(reader)?;
 
-            // let cmd = serde_json::from_reader(reader)?; //TODO
             if let Command::Set { value, .. } = cmd {
                 Ok(Some(value))
             } else {

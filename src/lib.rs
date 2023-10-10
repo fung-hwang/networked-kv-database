@@ -7,18 +7,21 @@
  * Anyway, these two things are placed in the same library o(╥﹏╥)o
  */
 
-mod client;
-mod common;
-mod engines;
+mod cs; // client-server
+mod engines; // storage engines
 mod error;
-mod server;
+mod thread_pool;
 
-pub use client::KvsClient;
+pub use cs::client::KvsClient;
+pub use cs::server::KvsServer;
 pub use engines::kvstore::KvStore;
-pub use engines::redb::Redb;
 pub use engines::KvsEngine;
+// pub use engines::redb::Redb;
 pub use error::Error;
-pub use server::KvsServer;
+pub use thread_pool::naive::NaiveThreadPool;
+pub use thread_pool::rayon::RayonThreadPool;
+pub use thread_pool::shared_queue::SharedQueueThreadPool;
+pub use thread_pool::ThreadPool;
 
 /// Alias for a Result with the error type kvs::Error
 pub type Result<T> = std::result::Result<T, crate::Error>;

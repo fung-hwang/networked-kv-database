@@ -3,6 +3,7 @@ use thiserror::Error;
 /// This type represents all possible errors in kvs lib.
 #[derive(Error, Debug)]
 pub enum Error {
+    // TODO: Classified by module
     #[error("Key not found")]
     KeyNotFound,
     #[error("Unexpected Command")]
@@ -15,4 +16,6 @@ pub enum Error {
     SerdeJson(#[from] serde_json::Error),
     #[error("Redb Error: {}", .0)]
     Redb(#[from] redb::Error),
+    #[error("Rayon ThreadPoolBuildError: {}", .0)]
+    RayonThreadPoolBuildError(#[from] rayon::ThreadPoolBuildError),
 }

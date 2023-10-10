@@ -34,22 +34,22 @@ fn engine_write(c: &mut Criterion) {
         )
     });
 
-    group.bench_function("redb", |b| {
-        b.iter_batched(
-            || {
-                let store = Redb::open(TempDir::new().unwrap().path()).unwrap();
-                store
-            },
-            |mut store| {
-                for i in 0..KV_SIZE {
-                    store
-                        .set(format!("key{}", key_numbers[i]), "value".to_string())
-                        .unwrap();
-                }
-            },
-            BatchSize::SmallInput,
-        )
-    });
+    // group.bench_function("redb", |b| {
+    //     b.iter_batched(
+    //         || {
+    //             let store = Redb::open(TempDir::new().unwrap().path()).unwrap();
+    //             store
+    //         },
+    //         |mut store| {
+    //             for i in 0..KV_SIZE {
+    //                 store
+    //                     .set(format!("key{}", key_numbers[i]), "value".to_string())
+    //                     .unwrap();
+    //             }
+    //         },
+    //         BatchSize::SmallInput,
+    //     )
+    // });
 
     group.finish();
 }
@@ -90,29 +90,29 @@ fn engine_read(c: &mut Criterion) {
         });
     }
 
-    for size in &[100, 500, 1000] {
-        group.bench_with_input(format!("redb_{}", size), size, |b, size| {
-            let temp_dir = TempDir::new().unwrap();
-            let mut store = Redb::open(temp_dir.path()).unwrap();
-            for key_i in &key_numbers {
-                store
-                    .set(format!("key{}", key_i), "value".to_string())
-                    .unwrap();
-            }
-            let mut rng2 = SmallRng::seed_from_u64(SEED);
-            let key_to_read: Vec<_> = vec![0; *size]
-                .iter()
-                .map(|_| rng2.gen_range(0..KV_SIZE))
-                .map(|i| &key_numbers[i])
-                .collect();
+    // for size in &[100, 500, 1000] {
+    //     group.bench_with_input(format!("redb_{}", size), size, |b, size| {
+    //         let temp_dir = TempDir::new().unwrap();
+    //         let mut store = Redb::open(temp_dir.path()).unwrap();
+    //         for key_i in &key_numbers {
+    //             store
+    //                 .set(format!("key{}", key_i), "value".to_string())
+    //                 .unwrap();
+    //         }
+    //         let mut rng2 = SmallRng::seed_from_u64(SEED);
+    //         let key_to_read: Vec<_> = vec![0; *size]
+    //             .iter()
+    //             .map(|_| rng2.gen_range(0..KV_SIZE))
+    //             .map(|i| &key_numbers[i])
+    //             .collect();
 
-            b.iter(|| {
-                for key_i in &key_to_read {
-                    store.get(format!("key{}", key_i)).unwrap();
-                }
-            })
-        });
-    }
+    //         b.iter(|| {
+    //             for key_i in &key_to_read {
+    //                 store.get(format!("key{}", key_i)).unwrap();
+    //             }
+    //         })
+    //     });
+    // }
 }
 
 criterion_group!(benches, engine_write, engine_read);

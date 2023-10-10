@@ -8,6 +8,8 @@ pub struct Redb {
     db: Database,
 }
 
+// TODO: Can we impl Clone for Redb?
+
 impl KvsEngine for Redb {
     /// New redb at the specified path
     fn open(path: impl AsRef<std::path::Path>) -> Result<Self> {
@@ -20,7 +22,7 @@ impl KvsEngine for Redb {
     }
 
     /// Encapsulate redb::Table::insert
-    fn set(&mut self, key: String, value: String) -> Result<()> {
+    fn set(&self, key: String, value: String) -> Result<()> {
         let write_txn = self.db.begin_write().map_err(redb::Error::from)?;
 
         {
@@ -33,7 +35,7 @@ impl KvsEngine for Redb {
     }
 
     /// Encapsulate redb::ReadOnlyTable::get
-    fn get(&mut self, key: String) -> Result<Option<String>> {
+    fn get(&self, key: String) -> Result<Option<String>> {
         let read_txn = self.db.begin_read().map_err(redb::Error::from)?;
         let table = read_txn.open_table(TABLE).map_err(redb::Error::from)?;
 
@@ -42,7 +44,7 @@ impl KvsEngine for Redb {
     }
 
     /// Encapsulate redb::Table::remove
-    fn remove(&mut self, key: String) -> Result<()> {
+    fn remove(&self, key: String) -> Result<()> {
         let rst: Result<()>;
 
         let write_txn = self.db.begin_write().map_err(redb::Error::from)?;

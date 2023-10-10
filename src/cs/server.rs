@@ -1,22 +1,21 @@
-use crate::{common::*, KvsEngine, Result};
+use super::*;
+use crate::{KvsEngine, Result, ThreadPool};
 use log::{debug, error};
 use serde::Deserialize;
 use serde_json::Deserializer;
 use std::{
-    env::current_dir,
     io::{BufReader, BufWriter, Write},
     net::{TcpListener, TcpStream, ToSocketAddrs},
 };
 
-pub struct KvsServer<E: KvsEngine> {
+pub struct KvsServer<E: KvsEngine, T: ThreadPool> {
     engine: E,
+    threadpool: T,
 }
 
-impl<E: KvsEngine> KvsServer<E> {
-    pub fn new() -> Result<Self> {
-        Ok(Self {
-            engine: E::open(current_dir()?.join("database"))?,
-        })
+impl<E: KvsEngine, T: ThreadPool> KvsServer<E, T> {
+    pub fn new(engine: E, threadpool: T) -> Result<Self> {
+        Ok(Self { engine, threadpool })
     }
 
     /// Run the server listening on the given address
@@ -29,7 +28,12 @@ impl<E: KvsEngine> KvsServer<E> {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    self.handle_connection(stream)?;
+                    let engine = self.engine.clone();
+                    self.threadpool.spawn(move || {
+                        if let Err(err) = Self::handle_connection(engine, stream) {
+                            error!("Handle TCP connection error: {err}");
+                        }
+                    })
                 }
                 Err(err) => {
                     error!("TCP connection failed: {err}");
@@ -41,7 +45,7 @@ impl<E: KvsEngine> KvsServer<E> {
     }
 
     /// Receive requests, execute command and send response
-    fn handle_connection(&mut self, stream: TcpStream) -> Result<()> {
+    fn handle_connection(engine: E, stream: TcpStream) -> Result<()> {
         let buf_reader = BufReader::new(&stream);
         let mut buf_writer = BufWriter::new(&stream);
         // Don't use serde_json::from_reader(), this function will not return if the stream does not end
@@ -51,7 +55,7 @@ impl<E: KvsEngine> KvsServer<E> {
         debug!("Receive request: {:?}", request);
         match request {
             Requests::Set { key, value } => {
-                let rst = self.engine.set(key, value);
+                let rst = engine.set(key, value);
                 let response: Response4Set = match rst {
                     Ok(_) => Response4Set::Ok(()),
                     Err(err) => Response4Set::Err(format!("{}", err)),
@@ -61,7 +65,7 @@ impl<E: KvsEngine> KvsServer<E> {
                 debug!("Send response: {:?}", response);
             }
             Requests::Get { key } => {
-                let rst = self.engine.get(key);
+                let rst = engine.get(key);
                 let response: Response4Get = match rst {
                     Ok(value) => Response4Get::Ok(value),
                     Err(err) => Response4Get::Err(format!("{}", err)),
@@ -71,7 +75,7 @@ impl<E: KvsEngine> KvsServer<E> {
                 debug!("Send response: {:?}", response);
             }
             Requests::Remove { key } => {
-                let rst = self.engine.remove(key);
+                let rst = engine.remove(key);
                 let response: Response4Remove = match rst {
                     Ok(_) => Response4Remove::Ok(()),
                     Err(err) => Response4Remove::Err(format!("{}", err)),

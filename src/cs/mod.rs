@@ -1,4 +1,8 @@
 //! Commands across the network for client and server
+
+pub mod client;
+pub mod server;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]

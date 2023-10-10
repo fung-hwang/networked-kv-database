@@ -8,11 +8,13 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 
+extern crate num_cpus;
+
 #[derive(Debug, Clone, ValueEnum, PartialEq, Eq)]
 enum Engine {
     Kvs, // KvStore
-    Redb,
-    // Sled,
+         // Redb,
+         // Sled,
 }
 
 #[derive(Parser, Debug)]
@@ -91,8 +93,7 @@ impl Options {
                 Err(_err) => {
                     // err format: "invalid variant: abc"
                     error!("Unexpected engine: {:?}", str_from_engine_file);
-                    anyhow::Ok(None) // TODO: process::exit or return Ok
-                                     // std::process::exit(1);
+                    anyhow::Ok(None)
                 }
             }
         }
@@ -138,8 +139,11 @@ fn run(mut options: Options) -> anyhow::Result<()> {
     info!("Listening on {}", options.addr);
 
     match options.engine.unwrap() {
-        Engine::Kvs => kvs::KvsServer::<KvStore>::new()?.start(options.addr)?,
-        Engine::Redb => kvs::KvsServer::<Redb>::new()?.start(options.addr)?,
+        Engine::Kvs => {
+            let engine = KvStore::open(current_dir()?.join("storage"))?;
+            let threadpool = SharedQueueThreadPool::new(num_cpus::get())?;
+            kvs::KvsServer::new(engine, threadpool)?.start(options.addr)?
+        } // Engine::Redb =>
     }
 
     Ok(())
