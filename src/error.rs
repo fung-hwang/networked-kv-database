@@ -14,8 +14,8 @@ pub enum Error {
     IO(#[from] std::io::Error),
     #[error("Serde_json Error: {}", .0)]
     SerdeJson(#[from] serde_json::Error),
-    #[error("Redb Error: {}", .0)]
-    Redb(#[from] redb::Error),
+    #[error("Jammdb Error: {}", .0)]
+    Jammdb(#[from] jammdb::Error),
     #[error("Rayon ThreadPoolBuildError: {}", .0)]
     RayonThreadPoolBuildError(#[from] rayon::ThreadPoolBuildError),
 }

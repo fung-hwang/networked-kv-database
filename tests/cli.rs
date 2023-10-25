@@ -173,12 +173,12 @@ fn cli_log_configuration() {
 
 #[test]
 fn cli_wrong_engine() {
-    // redb first, kvs second
+    // jammdb first, kvs second
     {
         let temp_dir = TempDir::new().unwrap();
         let mut cmd = Command::cargo_bin("kvs-server").unwrap();
         let mut child = cmd
-            .args(&["--engine", "redb", "--addr", "127.0.0.1:4002"])
+            .args(&["--engine", "jammdb", "--addr", "127.0.0.1:4002"])
             .current_dir(&temp_dir)
             .spawn()
             .unwrap();
@@ -192,7 +192,7 @@ fn cli_wrong_engine() {
             .failure();
     }
 
-    // kvs first, redb second
+    // kvs first, jammdb second
     {
         let temp_dir = TempDir::new().unwrap();
         let mut cmd = Command::cargo_bin("kvs-server").unwrap();
@@ -205,7 +205,7 @@ fn cli_wrong_engine() {
         child.kill().expect("server exited before killed");
 
         let mut cmd = Command::cargo_bin("kvs-server").unwrap();
-        cmd.args(&["--engine", "redb", "--addr", "127.0.0.1:4003"])
+        cmd.args(&["--engine", "jammdb", "--addr", "127.0.0.1:4003"])
             .current_dir(&temp_dir)
             .assert()
             .failure();
@@ -332,6 +332,6 @@ fn cli_access_server_kvs_engine() {
 }
 
 #[test]
-fn cli_access_server_redb_engine() {
-    cli_access_server("redb", "127.0.0.1:4005");
+fn cli_access_server_jammdb_engine() {
+    cli_access_server("jammdb", "127.0.0.1:4005");
 }

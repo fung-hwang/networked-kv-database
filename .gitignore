@@ -1,4 +1,7 @@
 /target
 engine
 database/
-redb_data
+storage/
+storage
+bench_storage/
+bench_storage

@@ -13,6 +13,7 @@ extern crate num_cpus;
 #[derive(Debug, Clone, ValueEnum, PartialEq, Eq)]
 enum Engine {
     Kvs, // KvStore
+    Jammdb, // Jammdb
          // Redb,
          // Sled,
 }
@@ -141,6 +142,11 @@ fn run(mut options: Options) -> anyhow::Result<()> {
     match options.engine.unwrap() {
         Engine::Kvs => {
             let engine = KvStore::open(current_dir()?.join("storage"))?;
+            let threadpool = SharedQueueThreadPool::new(num_cpus::get())?;
+            kvs::KvsServer::new(engine, threadpool)?.start(options.addr)?
+        }
+        Engine::Jammdb => {
+            let engine = Jammdb::open(current_dir()?.join("storage"))?;
             let threadpool = SharedQueueThreadPool::new(num_cpus::get())?;
             kvs::KvsServer::new(engine, threadpool)?.start(options.addr)?
         } // Engine::Redb =>

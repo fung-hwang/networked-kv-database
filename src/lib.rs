@@ -14,6 +14,7 @@ mod thread_pool;
 
 pub use cs::client::KvsClient;
 pub use cs::server::KvsServer;
+pub use engines::jammdb::Jammdb;
 pub use engines::kvstore::KvStore;
 pub use engines::KvsEngine;
 // pub use engines::redb::Redb;

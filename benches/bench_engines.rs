@@ -55,7 +55,7 @@ fn engine_write(c: &mut Criterion) {
 }
 
 fn engine_read(c: &mut Criterion) {
-    let mut group = c.benchmark_group("engine_write");
+    let mut group = c.benchmark_group("engine_read");
     const KV_SIZE: usize = 1000;
 
     // Preset data

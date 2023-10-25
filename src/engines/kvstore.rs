@@ -1,6 +1,6 @@
 use crate::{Error, KvsEngine, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::ffi::OsStr;
 use std::fs::{self, create_dir_all, File};
 use std::io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write};
@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::result;
 use std::sync::{Arc, Mutex};
 
-const COMPACT_THRESHOLD: u64 = 1_000_000; // Compact when reaching the threshold
+const COMPACT_THRESHOLD: u64 = 10_000_000; // Compact when reaching the threshold
 
 /// The `KvStore` stores string key/value pairs on disk.
 ///
@@ -62,10 +62,10 @@ impl Clone for KvStore {
 
 struct InnerStore {
     path: PathBuf,
-    index: HashMap<String, CommandPos>, // A map of keys to log pointers
-    readers: HashMap<u64, BufReaderWithPos<File>>, // A map of file_id to reader
-    writer: BufWriterWithPos<File>,     // Writer of active data file
-    active_file_id: u64,                // Active data file
+    index: BTreeMap<String, CommandPos>, // A map of keys to log pointers
+    readers: BTreeMap<u64, BufReaderWithPos<File>>, // A map of file_id to reader
+    writer: BufWriterWithPos<File>,      // Writer of active data file
+    active_file_id: u64,                 // Active data file
     uncompacted_size: u64,
 }
 
@@ -132,8 +132,8 @@ impl InnerStore {
         // let path: PathBuf = path.into();
         create_dir_all(&path)?;
 
-        let mut readers = HashMap::new();
-        let mut index = HashMap::new();
+        let mut readers = BTreeMap::new();
+        let mut index = BTreeMap::new();
 
         let file_list = sorted_file_list(&path)?;
 
@@ -148,7 +148,8 @@ impl InnerStore {
         }
 
         // Create new log file(active data file) and its writer
-        let active_file_id = (file_list.len() + 1) as u64;
+        // let active_file_id = (file_list.len() + 1) as u64;
+        let active_file_id = *file_list.last().unwrap_or(&0) + 1;
         let writer = new_data_file(&path, active_file_id, &mut readers)?;
 
         let path = path.as_ref().to_path_buf();
@@ -398,7 +399,7 @@ fn log_path<P: AsRef<Path>>(path: P, file_id: u64) -> PathBuf {
 fn new_data_file<P: AsRef<Path>>(
     path: P,
     file_id: u64,
-    readers: &mut HashMap<u64, BufReaderWithPos<File>>,
+    readers: &mut BTreeMap<u64, BufReaderWithPos<File>>,
 ) -> Result<BufWriterWithPos<File>> {
     let path = log_path(&path, file_id);
     let writer = BufWriterWithPos::new(
@@ -418,7 +419,7 @@ fn new_data_file<P: AsRef<Path>>(
 fn load_index(
     file_id: u64,
     reader: &mut BufReaderWithPos<File>,
-    index: &mut HashMap<String, CommandPos>,
+    index: &mut BTreeMap<String, CommandPos>,
 ) -> Result<u64> {
     let mut uncompacted_size: u64 = 0;
     let mut pos = reader.seek(SeekFrom::Start(0))?;

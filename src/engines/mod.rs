@@ -1,5 +1,6 @@
 use crate::Result;
 
+pub mod jammdb;
 pub mod kvstore;
 // pub mod redb;
 

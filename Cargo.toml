@@ -20,6 +20,8 @@ redb = "1.2"
 crossbeam-channel = "0.5"
 num_cpus = "1.0"
 rayon = "1.8"
+jammdb = "0.10"
+crossbeam-skiplist = "0.1"
 
 [dev-dependencies]
 assert_cmd = "2.0"
@@ -31,7 +33,10 @@ rand = { version = "0.8.5", features = [ "small_rng" ] }
 crossbeam-utils = "0.8"
 panic-control = "0.1.4"
 
-
 [[bench]]
 name = "bench_engines"
+harness = false
+
+[[bench]]
+name = "bench_threadpool"
 harness = false
