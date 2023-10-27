@@ -41,7 +41,7 @@ fn write_queued_kvstore(c: &mut Criterion) {
             |b, &_size| {
                 b.iter_batched_ref(
                     || {
-                        let client_threadpool = SharedQueueThreadPool::new(10).unwrap();
+                        let client_threadpool = SharedQueueThreadPool::new(20).unwrap();
                         client_threadpool
                     },
                     |client_threadpool| {
@@ -93,7 +93,7 @@ fn read_queued_kvstore(c: &mut Criterion) {
             |b, &_size| {
                 b.iter_batched_ref(
                     || {
-                        let client_threadpool = SharedQueueThreadPool::new(10).unwrap();
+                        let client_threadpool = SharedQueueThreadPool::new(20).unwrap();
                         client_threadpool
                     },
                     |client_threadpool| {
@@ -121,7 +121,7 @@ fn read_queued_kvstore(c: &mut Criterion) {
 }
 
 fn write_rayon_kvstore(c: &mut Criterion) {
-    let mut group = c.benchmark_group("write_queued_kvstore");
+    let mut group = c.benchmark_group("write_rayon_kvstore");
 
     for size in get_thread_sizes() {
         // Server
@@ -141,7 +141,7 @@ fn write_rayon_kvstore(c: &mut Criterion) {
             |b, &_size| {
                 b.iter_batched_ref(
                     || {
-                        let client_threadpool = SharedQueueThreadPool::new(10).unwrap(); // Don't new RayonThreadPool here
+                        let client_threadpool = SharedQueueThreadPool::new(20).unwrap(); // Don't new RayonThreadPool here
                         client_threadpool
                     },
                     |client_threadpool| {
@@ -168,9 +168,8 @@ fn write_rayon_kvstore(c: &mut Criterion) {
     group.finish();
 }
 
-// FIXME: Cannot be executed correctly, but I dont know why
 fn read_rayon_kvstore(c: &mut Criterion) {
-    let mut group = c.benchmark_group("read_queued_kvstore");
+    let mut group = c.benchmark_group("read_rayon_kvstore");
 
     for size in get_thread_sizes() {
         let engine = KvStore::open(current_dir().unwrap().join("bench_storage")).unwrap();
@@ -194,7 +193,7 @@ fn read_rayon_kvstore(c: &mut Criterion) {
             |b, &_size| {
                 b.iter_batched_ref(
                     || {
-                        let client_threadpool = SharedQueueThreadPool::new(10).unwrap();
+                        let client_threadpool = SharedQueueThreadPool::new(20).unwrap();
                         client_threadpool
                     },
                     |client_threadpool| {
@@ -241,7 +240,7 @@ fn write_queued_jammdb(c: &mut Criterion) {
             |b, &_size| {
                 b.iter_batched_ref(
                     || {
-                        let client_threadpool = SharedQueueThreadPool::new(10).unwrap();
+                        let client_threadpool = SharedQueueThreadPool::new(20).unwrap();
                         client_threadpool
                     },
                     |client_threadpool| {
@@ -269,7 +268,7 @@ fn write_queued_jammdb(c: &mut Criterion) {
 }
 
 fn read_queued_jammdb(c: &mut Criterion) {
-    let mut group = c.benchmark_group("read_queued_kvstore");
+    let mut group = c.benchmark_group("read_queued_jammdb");
 
     for size in get_thread_sizes() {
         let engine = Jammdb::open(TempDir::new().unwrap().path().join("bench_storage")).unwrap();
@@ -294,7 +293,7 @@ fn read_queued_jammdb(c: &mut Criterion) {
             |b, &_size| {
                 b.iter_batched_ref(
                     || {
-                        let client_threadpool = SharedQueueThreadPool::new(10).unwrap();
+                        let client_threadpool = SharedQueueThreadPool::new(20).unwrap();
                         client_threadpool
                     },
                     |client_threadpool| {

@@ -23,7 +23,7 @@ fn engine_write(c: &mut Criterion) {
                 let store = KvStore::open(TempDir::new().unwrap().path()).unwrap();
                 store
             },
-            |mut store| {
+            |store| {
                 for i in 0..KV_SIZE {
                     store
                         .set(format!("key{}", key_numbers[i]), "value".to_string())
@@ -33,23 +33,6 @@ fn engine_write(c: &mut Criterion) {
             BatchSize::SmallInput,
         )
     });
-
-    // group.bench_function("redb", |b| {
-    //     b.iter_batched(
-    //         || {
-    //             let store = Redb::open(TempDir::new().unwrap().path()).unwrap();
-    //             store
-    //         },
-    //         |mut store| {
-    //             for i in 0..KV_SIZE {
-    //                 store
-    //                     .set(format!("key{}", key_numbers[i]), "value".to_string())
-    //                     .unwrap();
-    //             }
-    //         },
-    //         BatchSize::SmallInput,
-    //     )
-    // });
 
     group.finish();
 }
@@ -66,10 +49,10 @@ fn engine_read(c: &mut Criterion) {
         *num = rng.next_u32();
     }
 
-    for size in &[100, 500, 1000] {
+    for size in &[100, 1_000, 10_000] {
         group.bench_with_input(format!("kvs_{}", size), size, |b, size| {
             let temp_dir = TempDir::new().unwrap();
-            let mut store = KvStore::open(temp_dir.path()).unwrap();
+            let store = KvStore::open(temp_dir.path()).unwrap();
             for key_i in &key_numbers {
                 store
                     .set(format!("key{}", key_i), "value".to_string())
@@ -90,29 +73,7 @@ fn engine_read(c: &mut Criterion) {
         });
     }
 
-    // for size in &[100, 500, 1000] {
-    //     group.bench_with_input(format!("redb_{}", size), size, |b, size| {
-    //         let temp_dir = TempDir::new().unwrap();
-    //         let mut store = Redb::open(temp_dir.path()).unwrap();
-    //         for key_i in &key_numbers {
-    //             store
-    //                 .set(format!("key{}", key_i), "value".to_string())
-    //                 .unwrap();
-    //         }
-    //         let mut rng2 = SmallRng::seed_from_u64(SEED);
-    //         let key_to_read: Vec<_> = vec![0; *size]
-    //             .iter()
-    //             .map(|_| rng2.gen_range(0..KV_SIZE))
-    //             .map(|i| &key_numbers[i])
-    //             .collect();
-
-    //         b.iter(|| {
-    //             for key_i in &key_to_read {
-    //                 store.get(format!("key{}", key_i)).unwrap();
-    //             }
-    //         })
-    //     });
-    // }
+    group.finish();
 }
 
 criterion_group!(benches, engine_write, engine_read);
